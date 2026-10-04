@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Physik-Kurs: Megaquiz Nr.1</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#667085;
+      --line:#d9deea;
+      --accent:#2f5fd0;
+      --accent2:#eef3ff;
+      --ok:#147a3f;
+      --bad:#b42318;
+      --okbg:#eaf7ef;
+      --badbg:#fff1f0;
+      --shadow:0 14px 35px rgba(15,23,42,.10);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(135deg,#f8fbff 0%,#eef2f9 100%);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .app{
+      width:min(940px,100%);
+      background:rgba(255,255,255,.78);
+      border:1px solid rgba(255,255,255,.9);
+      box-shadow:var(--shadow);
+      border-radius:30px;
+      overflow:hidden;
+      backdrop-filter:blur(14px);
+    }
+    header{
+      padding:28px 30px 18px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(135deg,#ffffff 0%,#f4f7ff 100%);
+    }
+    h1{margin:0 0 8px;font-size:clamp(1.55rem,3vw,2.35rem);line-height:1.1}
+    .subtitle{margin:0;color:var(--muted);font-size:1rem;line-height:1.5}
+    main{padding:28px 30px 32px}
+    .screen{display:none}.screen.active{display:block}
+    .controls{display:grid;grid-template-columns:1fr;gap:12px;margin:24px 0 8px}
+    .choice-card{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      padding:16px;
+      cursor:pointer;
+      transition:.18s ease;
+      min-height:104px;
+    }
+    .choice-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 10px 24px rgba(47,95,208,.12)}
+    .choice-card strong{display:block;margin-bottom:6px;font-size:1.05rem}
+    .choice-card span{color:var(--muted);font-size:.94rem;line-height:1.35}
+    .topbar{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted);font-size:.94rem}
+    .progress{height:11px;background:#e7ebf4;border-radius:999px;overflow:hidden;flex:1;min-width:180px}
+    .bar{height:100%;width:0;background:var(--accent);transition:.25s ease}
+    .question-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+    .tag{display:inline-block;background:var(--accent2);color:var(--accent);padding:6px 10px;border-radius:999px;font-weight:700;font-size:.82rem;margin-bottom:14px}
+    .question{font-size:1.35rem;line-height:1.35;margin:0 0 20px;font-weight:750}
+    .answers{display:grid;gap:11px}
+    button{font:inherit}
+    .answer{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:16px;padding:15px 16px;cursor:pointer;line-height:1.35;transition:.14s ease}
+    .answer:hover:not(:disabled){border-color:var(--accent);background:#f8faff}
+    .answer:disabled{cursor:default}
+    .answer.correct{border-color:rgba(20,122,63,.35);background:var(--okbg);color:var(--ok);font-weight:700}
+    .answer.wrong{border-color:rgba(180,35,24,.35);background:var(--badbg);color:var(--bad);font-weight:700}
+    .feedback{display:none;margin-top:18px;padding:16px;border-radius:16px;border:1px solid var(--line);background:#fafbff;line-height:1.55}
+    .feedback.show{display:block}
+    .feedback strong{display:block;margin-bottom:4px}
+    .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+    .primary,.secondary{border:0;border-radius:14px;padding:12px 16px;cursor:pointer;font-weight:750}
+    .primary{background:var(--accent);color:black}.primary:hover{filter:brightness(.96)}
+    .secondary{background:#edf1f8;color:#26334d}.secondary:hover{background:#e3e9f4}
+    .result-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+    .score{font-size:clamp(2rem,6vw,4.4rem);line-height:1;margin:4px 0 10px;font-weight:850;color:var(--accent)}
+    .small{color:var(--muted);line-height:1.55}
+    .review{margin-top:22px;display:grid;gap:10px}
+    .review-item{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;line-height:1.45}
+    .review-item.ok{border-left:7px solid var(--ok)}.review-item.bad{border-left:7px solid var(--bad)}
+    .review-item b{display:block;margin-bottom:4px}
+    footer{padding:0 30px 24px;color:var(--muted);font-size:.88rem;text-align:center}
+
+    html[data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#a7b0c0;--line:#334155;
+      --accent:#7aa2ff;--accent2:#172554;--ok:#70e39b;--bad:#ff8f86;--okbg:#0b2f1f;--badbg:#351414;
+      --shadow:0 14px 35px rgba(0,0,0,.35);
+    }
+    html[data-theme="dark"] body{background:linear-gradient(135deg,#020617 0%,#111827 100%)}
+    html[data-theme="dark"] .app{background:rgba(15,23,42,.88);border-color:rgba(148,163,184,.18)}
+    html[data-theme="dark"] header{background:linear-gradient(135deg,#111827 0%,#172033 100%)}
+    html[data-theme="dark"] .choice-card,
+    html[data-theme="dark"] .question-card,
+    html[data-theme="dark"] .answer,
+    html[data-theme="dark"] .result-box,
+    html[data-theme="dark"] .review-item{background:var(--card);border-color:var(--line)}
+    html[data-theme="dark"] .answer:hover:not(:disabled){background:#1f2937}
+    html[data-theme="dark"] .pill,
+    html[data-theme="dark"] .feedback{background:#111827;border-color:var(--line)}
+    html[data-theme="dark"] .progress,
+    html[data-theme="dark"] .secondary{background:#1f2937}
+    html[data-theme="dark"] .secondary{color:var(--text)}
+    html[data-theme="dark"] .secondary:hover{background:#263244}
+    html[data-theme="dark"] .primary{color:#ffffff}
+    html[data-theme="dark"] .choice-card:hover,
+    html[data-theme="dark"] .answer:hover:not(:disabled){border-color:var(--accent)}
+    .theme-toggle{margin-top:16px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:9px 14px;cursor:pointer;font-weight:750;box-shadow:0 6px 16px rgba(15,23,42,.08)}
+    .theme-toggle:hover{border-color:var(--accent)}
+    @media (max-width:760px){body{padding:12px;align-items:flex-start}.app{border-radius:22px}header,main{padding-left:18px;padding-right:18px}.controls{grid-template-columns:1fr}.question{font-size:1.16rem}.actions{justify-content:stretch}.primary,.secondary{width:100%}}
+    @media print{body{background:black}.app{box-shadow:none}.actions,.controls,footer{display:none}.screen{display:block}.screen:not(.active){display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Physik-Kurs: Megaquiz Nr.1</h1>
+      <p class="subtitle">100 Fragen aus Quiz 1–5 · Pro Frage ist nur eine Antwort richtig.</p>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Dark Mode umschalten">Dark Mode</button>
+    </header>
+
+    <main>
+      <section id="start" class="screen active">
+        <div class="controls">
+          <div class="choice-card" onclick="startQuiz()">
+            <strong>Physik-Quiz starten</strong>
+            <span>Alle Fragen aus Quiz 1 bis Quiz 5.</span>
+          </div>
+        </div>
+        <p class="small">Die 100 Fragen werden bei jedem Start neu gemischt. Nach jeder Antwort erscheint sofort eine kurze Erklärung. Am Ende sehen Sie Ihre Auswertung.</p>
+      </section>
+
+      <section id="quiz" class="screen">
+        <div class="topbar">
+          <span class="pill" id="counter">Frage 1/20</span>
+          <div class="progress"><div id="bar" class="bar"></div></div>
+          <span class="pill" id="scoreNow">0 richtig</span>
+        </div>
+        <div class="question-card">
+          <span id="tag" class="tag">Physik · Megaquiz Nr.1 · Quiz 1–5</span>
+          <p id="question" class="question"></p>
+          <div id="answers" class="answers"></div>
+          <div id="feedback" class="feedback"></div>
+          <div class="actions">
+            <button class="secondary" onclick="backToStart()">Zum Start</button>
+            <button id="nextBtn" class="primary" onclick="nextQuestion()" style="display:none">Weiter</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="result" class="screen">
+        <div class="result-box">
+          <p class="small" style="margin:0">Ergebnis</p>
+          <div id="finalScore" class="score">0/0</div>
+          <p id="finalText" class="small"></p>
+          <div class="actions" style="justify-content:flex-start">
+            <button class="primary" onclick="startQuiz()">Nochmal üben</button>
+            <button class="secondary" onclick="backToStart()">Zum Start</button>
+          </div>
+          <div id="review" class="review"></div>
+        </div>
+      </section>
+    </main>
+    <footer>Offline nutzbar · Einfache HTML-Datei · Keine externen Inhalte</footer>
+  </div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('quiz-theme', theme);
+  if(themeToggle){
+    themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  }
+}
+const savedTheme = localStorage.getItem('quiz-theme');
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+setTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+if(themeToggle){
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  });
+}
+
+const ALL_QUESTIONS = [{"type":"grundlagen","q":"Welches Zusammenspiel ist für die moderne Physik besonders wichtig?","a":["Experiment – Theorie – Mathematik","Experiment – Meinung – Technik","Mathematik – Sprache – Geschichte","Beobachtung – Schätzung – Vermutung"],"c":0,"e":"Moderne Physik entsteht aus dem ständigen Wechselspiel von Experiment, Theorie und Mathematik."},{"type":"grundlagen","q":"Welche Aufgabe hat die Physik als Naturwissenschaft?","a":["Naturphänomene untersuchen, Regelmäßigkeiten beschreiben und Vorhersagen ableiten","Naturphänomene nur beobachten, ohne sie zu erklären","Ausschließlich technische Geräte entwickeln","Mathematische Gleichungen unabhängig von Beobachtungen untersuchen"],"c":0,"e":"Physik untersucht Naturphänomene und versucht, daraus Gesetzmäßigkeiten und Vorhersagen abzuleiten."},{"type":"grundlagen","q":"Warum gilt Mathematik als wichtigste Sprache der modernen Physik?","a":["Mit ihr lassen sich Modelle formulieren, Vorhersagen berechnen und Messdaten auswerten","Mit ihr lassen sich Experimente vollständig ersetzen","Mit ihr kann jede physikalische Theorie endgültig bewiesen werden","Mit ihr werden ausschließlich physikalische Einheiten festgelegt"],"c":0,"e":"Mathematik dient unter anderem zur Modellbildung, für Vorhersagen, Simulationen und zur Auswertung von Messdaten."},{"type":"grundlagen","q":"Was ist ein physikalisches Modell?","a":["Eine vereinfachte Darstellung der Wirklichkeit für eine bestimmte Fragestellung","Eine vollständige Kopie der Wirklichkeit ohne Vereinfachungen","Ein einzelner Messwert mit Einheit","Eine Vermutung, die grundsätzlich nicht überprüft werden kann"],"c":0,"e":"Ein Modell vereinfacht die Wirklichkeit und berücksichtigt nur die für die Fragestellung wichtigen Eigenschaften."},{"type":"methode","q":"Welcher Unterschied zwischen Induktion und Deduktion ist richtig?","a":["Induktion: Beobachtungen → allgemeine Gesetzmäßigkeit; Deduktion: allgemeine Gesetzmäßigkeit → spezielle Aussage","Induktion: Theorie → Experiment; Deduktion: Experiment → Messwert","Induktion: allgemeine Gesetzmäßigkeit → spezielle Aussage; Deduktion: Beobachtungen → allgemeine Gesetzmäßigkeit","Induktion und Deduktion bedeuten dasselbe"],"c":0,"e":"Induktion verallgemeinert Beobachtungen; Deduktion leitet aus allgemeinen Aussagen speziellere Aussagen ab."},{"type":"methode","q":"Worin unterscheiden sich Experimentalphysik und theoretische Physik vereinfacht?","a":["Experimentalphysik arbeitet stärker mit Beobachtungen und Experimenten, theoretische Physik stärker mit Modellen und Mathematik","Experimentalphysik benutzt keine Mathematik, theoretische Physik keine Experimente","Experimentalphysik untersucht nur Technik, theoretische Physik nur Natur","Zwischen beiden Bereichen gibt es grundsätzlich keinen Unterschied"],"c":0,"e":"Vereinfacht steht bei der Experimentalphysik das Experiment, bei der theoretischen Physik die mathematische Modellbildung stärker im Vordergrund."},{"type":"methode","q":"Was versteht man in der Physik unter „Empirie“?","a":["Erkenntnisse, die auf Beobachtungen, Messungen und Experimenten beruhen","Erkenntnisse, die ausschließlich aus mathematischen Beweisen entstehen","Eine Vermutung, die nicht überprüft werden kann","Die Gesamtheit aller physikalischen Einheiten"],"c":0,"e":"Empirie bezeichnet Erkenntnisse aus Beobachtungen, Messungen und Experimenten."},{"type":"methode","q":"Warum muss eine wissenschaftliche Hypothese falsifizierbar sein?","a":["Es muss mögliche Beobachtungen oder Experimente geben, die gegen die Hypothese sprechen könnten","Sie muss bereits vor dem Experiment als falsch gelten","Sie muss von allen Forschenden akzeptiert werden","Sie darf nach ihrer Formulierung nicht mehr verändert werden"],"c":0,"e":"Eine Hypothese ist nur naturwissenschaftlich überprüfbar, wenn mögliche Ergebnisse ihr auch widersprechen könnten."},{"type":"methode","q":"Welche Reihenfolge beschreibt die naturwissenschaftliche Methode vereinfacht richtig?","a":["Beobachtung/Frage → Hypothese → Vorhersage → Experiment → Auswertung → Schlussfolgerung → weitere Überprüfung","Hypothese → Schlussfolgerung → Beobachtung → Experiment → Vorhersage → Auswertung","Experiment → Theorie → Hypothese → Beobachtung → endgültiger Beweis","Beobachtung → endgültiger Beweis → Hypothese → Experiment"],"c":0,"e":"Typisch ist: beobachten und fragen, Hypothese bilden, vorhersagen, experimentell prüfen, auswerten und weiter überprüfen."},{"type":"grundlagen","q":"Warum kann eine physikalische Theorie normalerweise nicht endgültig bewiesen werden?","a":["Weil neue Beobachtungen oder bessere Theorien zeigen könnten, dass sie eingeschränkt, verändert oder erweitert werden muss","Weil Theorien grundsätzlich keine überprüfbaren Vorhersagen machen","Weil Experimente in der Physik keine Rolle spielen","Weil eine Theorie immer nur eine persönliche Meinung ist"],"c":0,"e":"Auch eine oft bestätigte Theorie bleibt überprüfbar. Neue Beobachtungen oder eine Theorie mit genaueren und umfassenderen Vorhersagen können zeigen, dass sie nur einen begrenzten Gültigkeitsbereich besitzt oder weiterentwickelt werden muss."},{"type":"grundlagen","q":"Was bedeutet der Gültigkeitsbereich einer Theorie am Beispiel der Newtonschen Mechanik?","a":["Sie liefert unter bestimmten Bedingungen sehr gute Ergebnisse, reicht aber z. B. bei sehr hohen Geschwindigkeiten nicht mehr aus","Sie gilt nur für Bewegungen auf der Erde","Sie gilt nur solange kein Experiment durchgeführt wird","Sie ist bei sehr hohen Geschwindigkeiten genauer als die Relativitätstheorie"],"c":0,"e":"Ein Gültigkeitsbereich beschreibt die Bedingungen, unter denen eine Theorie zuverlässig anwendbar ist."},{"type":"messen","q":"Woraus besteht eine physikalische Größe?","a":["Aus Zahlenwert und Einheit","Nur aus einem Zahlenwert","Nur aus einer Einheit","Aus Formelzeichen und Naturgesetz"],"c":0,"e":"Eine physikalische Größe besteht aus einem Zahlenwert und einer Einheit."},{"type":"messen","q":"Wozu dient das Internationale Einheitensystem (SI-System)?","a":["Damit physikalische Größen international einheitlich angegeben und verglichen werden können","Damit jedes Land eigene Einheiten verwenden kann","Damit physikalische Größen ohne Zahlenwerte angegeben werden","Damit nur sieben physikalische Größen verwendet werden dürfen"],"c":0,"e":"Das SI-System sorgt für international einheitliche und vergleichbare Maßeinheiten."},{"type":"messen","q":"Warum ist eine Messung in der Praxis niemals vollkommen exakt?","a":["Weil jede Messung mit einer gewissen Messunsicherheit verbunden ist","Weil physikalische Größen keine Einheiten besitzen","Weil Messgeräte grundsätzlich falsche Werte anzeigen","Weil nur theoretische Werte exakt sein dürfen"],"c":0,"e":"Messgeräte, Ablesen, Bedingungen und zufällige Einflüsse führen zu Messunsicherheiten."},{"type":"methode","q":"Was geschieht, wenn ein Experiment der Vorhersage einer Hypothese deutlich widerspricht?","a":["Die Hypothese muss überprüft und möglicherweise verändert oder verworfen werden","Die Messwerte werden grundsätzlich ignoriert","Die Hypothese gilt trotzdem als endgültig bewiesen","Das Experiment darf nicht wiederholt werden"],"c":0,"e":"Widersprechen die Ergebnisse der Vorhersage, muss die Hypothese kritisch überprüft werden."},{"type":"methode","q":"Warum ist es sinnvoll, ein Experiment zu wiederholen und auch von anderen Forschenden überprüfen zu lassen?","a":["Dadurch steigt das Vertrauen in die Zuverlässigkeit des Ergebnisses","Dadurch wird eine Theorie automatisch endgültig bewiesen","Dadurch werden Messunsicherheiten vollständig beseitigt","Dadurch braucht man keine Hypothese mehr"],"c":0,"e":"Wenn ein Ergebnis bei Wiederholungen und unabhängigen Überprüfungen bestätigt wird, steigt das Vertrauen in seine Zuverlässigkeit."},{"type":"grundlagen","q":"Wie arbeiten Empirie und Theorie in der Physik zusammen?","a":["Beobachtungen prüfen Theorien, und Theorien liefern neue Vorhersagen für Beobachtungen und Experimente","Empirie ersetzt Theorien vollständig","Theorien werden unabhängig von Beobachtungen entwickelt und nicht überprüft","Empirie und Theorie stehen grundsätzlich im Widerspruch zueinander"],"c":0,"e":"Empirie und Theorie ergänzen und kontrollieren sich gegenseitig."},{"type":"messen","q":"Welche Aussage über das SI-System ist richtig?","a":["Es basiert auf sieben Basiseinheiten","Es besteht ausschließlich aus den Einheiten Meter, Kilogramm und Sekunde","Es wird nur in Deutschland verwendet","Abgeleitete Einheiten sind im SI-System nicht erlaubt"],"c":0,"e":"Das SI-System basiert auf sieben Basiseinheiten: Meter (m), Kilogramm (kg), Sekunde (s), Ampere (A), Kelvin (K), Mol (mol) und Candela (cd)."},{"type":"messen","q":"Welche Aussage über Messunsicherheiten ist richtig?","a":["Sie lassen sich häufig verringern, aber nicht vollständig beseitigen","Sie verschwinden vollständig, wenn man eine Messung oft genug wiederholt","Sie entstehen ausschließlich durch falsches Ablesen","Sie treten nur bei Atomen und anderen mikroskopischen Systemen auf"],"c":0,"e":"Mehrfache Messungen und genauere Messgeräte können die Messunsicherheit verringern, aber nicht vollständig beseitigen."},{"type":"messen","q":"Welche Aussage unterscheidet gewöhnliche Messunsicherheit von der Heisenbergschen Unschärferelation richtig?","a":["Messunsicherheit kann durch Geräte und Bedingungen entstehen; die Unschärferelation ist eine fundamentale Eigenschaft der Quantenmechanik","Beides bezeichnet genau denselben Messfehler","Die Unschärferelation entsteht nur durch ungenaues Ablesen","Gewöhnliche Messunsicherheit tritt ausschließlich bei Atomen auf"],"c":0,"e":"Messunsicherheit hat praktische Ursachen; die Heisenbergsche Unschärferelation ist fundamental quantenmechanisch."},{"type":"kinematik","q":"Womit beschäftigt sich die Kinematik?","a":["Mit der Beschreibung, wie sich Körper bewegen","Mit den Ursachen von Bewegungsänderungen","Nur mit elektrischen Strömen und Spannungen","Nur mit der Zusammensetzung von Stoffen"],"c":0,"e":"Die Kinematik beschreibt, wie sich Körper bewegen. Die Ursachen von Bewegungsänderungen werden dagegen in der Dynamik betrachtet."},{"type":"kinematik","q":"Welche Frage gehört eher zur Dynamik als zur Kinematik?","a":["Warum verändert ein Körper seine Bewegung?","Welchen Weg legt ein Körper zurück?","Wie lange dauert eine Bewegung?","Wie schnell bewegt sich ein Körper?"],"c":0,"e":"Die Dynamik beschäftigt sich mit den Ursachen von Bewegungsänderungen. Weg, Zeit und Geschwindigkeit gehören zur Beschreibung der Bewegung."},{"type":"bezugssystem","q":"Was ist ein Bezugssystem?","a":["Ein Vergleichssystem, gegenüber dem Ort und Bewegung beschrieben werden","Ein Messgerät zur Bestimmung der Geschwindigkeit","Eine Einheit für die zurückgelegte Strecke","Eine Formel zur Berechnung der Beschleunigung"],"c":0,"e":"Ein Bezugssystem dient dazu, die Lage und Bewegung eines Körpers im Vergleich zu etwas anderem zu beschreiben."},{"type":"bezugssystem","q":"Eine Person sitzt in einem fahrenden Zug. Welche Aussage ist richtig?","a":["Gegenüber dem Sitz ruht sie, gegenüber einem Baum neben den Schienen bewegt sie sich","Gegenüber dem Sitz und dem Baum ruht sie","Gegenüber dem Sitz bewegt sie sich, gegenüber dem Baum ruht sie","Ob sie sich bewegt, kann grundsätzlich nicht beschrieben werden"],"c":0,"e":"Bewegung hängt vom Bezugssystem ab. Gegenüber dem Sitz ändert sich ihre Position nicht, gegenüber dem Baum schon."},{"type":"bezugssystem","q":"Was bedeutet die Aussage „Bewegung ist relativ“?","a":["Ob ein Körper ruht oder sich bewegt, hängt vom gewählten Bezugssystem ab","Jeder Körper bewegt sich immer mit derselben Geschwindigkeit","Bewegungen können grundsätzlich nicht gemessen werden","Nur beschleunigte Bewegungen sind echte Bewegungen"],"c":0,"e":"Ruhe und Bewegung werden immer relativ zu einem Bezugssystem beschrieben."},{"type":"galileo","q":"Welche Aussage beschreibt eine Grundidee des Galileischen Relativitätsprinzips?","a":["In Bezugssystemen, die sich gleichförmig, also mit gleichbleibender Geschwindigkeit, gegeneinander bewegen, gelten dieselben grundlegenden Gesetze der Bewegung","Es gibt genau ein ausgezeichnetes Bezugssystem, das wirklich ruht","Nur auf der Erde gelten die Gesetze der Bewegung","Bei jeder Bewegung ändern sich die Naturgesetze"],"c":0,"e":"Eine Grundidee des Galileischen Relativitätsprinzips ist, dass Bezugssysteme, die sich mit gleichbleibender Geschwindigkeit gegeneinander bewegen, für die grundlegenden Gesetze der Bewegung gleichwertig sind."},{"type":"galileo","q":"Welche Aussage über fallende Körper wollte Galileo mit seinen Untersuchungen in Frage stellen?","a":["Dass schwere Körper grundsätzlich schneller fallen als leichte","Dass sich die Geschwindigkeit eines fallenden Körpers verändern kann","Dass Bewegungen mit Weg und Zeit beschrieben werden können","Dass Experimente zur Untersuchung von Bewegung geeignet sind"],"c":0,"e":"Galileo stellte die damals verbreitete Vorstellung in Frage, dass schwere Körper grundsätzlich schneller fallen als leichte."},{"type":"galileo","q":"Warum verwendete Galileo bei seinen Untersuchungen schiefe Ebenen?","a":["Die Bewegung lief langsamer ab und ließ sich dadurch besser untersuchen","Die Kugeln wurden dadurch schwerer","Die Zeit spielte dadurch keine Rolle mehr","Die Geschwindigkeit blieb dadurch immer null"],"c":0,"e":"Auf einer schiefen Ebene ist die Beschleunigung geringer als beim freien Fall. Die Bewegung läuft langsamer ab und lässt sich leichter beobachten."},{"type":"geschwindigkeit","q":"Welche Formel gilt für eine gleichförmige Bewegung, also eine Bewegung mit gleichbleibender Geschwindigkeit?","a":["v = s / t","v = t / s","v = s · t","v = Δt / Δv"],"c":0,"e":"Bei einer gleichförmigen Bewegung bleibt die Geschwindigkeit gleich. Sie berechnet sich aus zurückgelegtem Weg geteilt durch benötigte Zeit: v = s / t."},{"type":"geschwindigkeit","q":"Was bedeutet eine Geschwindigkeit von 3 m/s?","a":["Der Körper legt bei gleichbleibender Geschwindigkeit in jeder Sekunde 3 m zurück","Der Körper benötigt 3 s für jeden Meter","Der Körper beschleunigt in jeder Sekunde um 3 m/s","Der Körper legt insgesamt genau 3 m zurück"],"c":0,"e":"3 m/s bedeutet, dass bei gleichbleibender Geschwindigkeit pro Sekunde 3 m Weg zurückgelegt werden."},{"type":"geschwindigkeit","q":"Welche Einheit ist die SI-Einheit der Geschwindigkeit?","a":["m/s","km/h","m/s²","m"],"c":0,"e":"Die SI-Einheit der Geschwindigkeit ist Meter pro Sekunde (m/s). km/h wird im Alltag und Straßenverkehr häufig verwendet."},{"type":"geschwindigkeit","q":"Zwei Fahrzeuge legen jeweils 100 m zurück. Fahrzeug A benötigt 5 s, Fahrzeug B 10 s. Welche Aussage ist richtig?","a":["Fahrzeug A ist schneller","Fahrzeug B ist schneller","Beide sind gleich schnell","Ohne die Masse der Fahrzeuge ist kein Vergleich möglich"],"c":0,"e":"Beide legen denselben Weg zurück. Fahrzeug A benötigt nur halb so viel Zeit und hat daher die größere Geschwindigkeit."},{"type":"rechnung","q":"Ein Körper legt 120 m in 10 s zurück. Wie groß ist seine Geschwindigkeit?","a":["12 m/s","1200 m/s","0,083 m/s","110 m/s"],"c":0,"e":"Mit v = s / t ergibt sich v = 120 m / 10 s = 12 m/s."},{"type":"beschleunigung","q":"Was beschreibt die Beschleunigung?","a":["Wie schnell sich die Geschwindigkeit verändert","Wie viel Weg ein Körper insgesamt zurücklegt","Wie groß die Masse eines Körpers ist","Wie lange ein Körper an einem Ort bleibt"],"c":0,"e":"Beschleunigung beschreibt die Änderung der Geschwindigkeit pro Zeit."},{"type":"beschleunigung","q":"Was bedeutet das Zeichen Δ in der Kinematik?","a":["Änderung","Geschwindigkeit","Weg","Masse"],"c":0,"e":"Das griechische Zeichen Delta (Δ) steht für eine Änderung einer Größe."},{"type":"beschleunigung","q":"Wie wird die Geschwindigkeitsänderung Δv berechnet?","a":["Endgeschwindigkeit − Anfangsgeschwindigkeit","Anfangsgeschwindigkeit − Endgeschwindigkeit","Endgeschwindigkeit + Anfangsgeschwindigkeit","Endgeschwindigkeit · Anfangsgeschwindigkeit"],"c":0,"e":"Eine Änderung wird als Endwert minus Anfangswert berechnet. Für die Geschwindigkeit gilt daher: Δv = Endgeschwindigkeit − Anfangsgeschwindigkeit."},{"type":"beschleunigung","q":"Welche Einheit ist die SI-Einheit der Beschleunigung?","a":["m/s²","m/s","km/h","m²/s"],"c":0,"e":"Die SI-Einheit der Beschleunigung ist Meter pro Sekunde zum Quadrat (m/s²)."},{"type":"beschleunigung","q":"Ein Auto fährt geradlinig mit konstant 100 km/h. Welche Aussage ist richtig?","a":["Seine Beschleunigung beträgt 0","Seine Beschleunigung beträgt 100 m/s²","Es kann keine Geschwindigkeit besitzen, weil es nicht beschleunigt","Seine Beschleunigung wird allein durch die gefahrene Strecke bestimmt"],"c":0,"e":"Bei geradliniger Bewegung mit konstanter Geschwindigkeit ändert sich die Geschwindigkeit nicht. Daher ist a = 0."},{"type":"beschleunigung","q":"Ein Auto bremst vor einer Ampel. Wie ist dieser Vorgang physikalisch zu beschreiben?","a":["Die Geschwindigkeit verändert sich, daher liegt eine Beschleunigung vor","Es liegt keine Beschleunigung vor, weil das Auto langsamer wird","Die Geschwindigkeit bleibt konstant, nur der Weg verändert sich","Die Beschleunigung kann nur beim Anfahren auftreten"],"c":0,"e":"Auch beim Bremsen ändert sich die Geschwindigkeit. Deshalb handelt es sich physikalisch ebenfalls um eine beschleunigte Bewegung."},{"type":"rechnung","q":"Ein Fahrzeug erhöht seine Geschwindigkeit in 6 s von 5 m/s auf 23 m/s. Wie groß ist die Beschleunigung?","a":["3 m/s²","4,67 m/s²","18 m/s²","28 m/s²"],"c":0,"e":"Zuerst wird die Geschwindigkeitsänderung berechnet: Endgeschwindigkeit − Anfangsgeschwindigkeit = 23 m/s − 5 m/s = 18 m/s. Dann gilt: a = 18 m/s / 6 s = 3 m/s²."},{"type":"bewegungsarten","q":"Ein ICE fährt auf einer geraden Strecke mit unveränderter Geschwindigkeit. Welche Bewegungsart liegt vor?","a":["Gleichförmige geradlinige Bewegung","Gleichmäßig beschleunigte geradlinige Bewegung","Freier Fall","Eine Bewegung ohne zurückgelegten Weg"],"c":0,"e":"Bei der gleichförmigen geradlinigen Bewegung bleibt die Geschwindigkeit konstant."},{"type":"bewegungsarten","q":"Was gilt bei einer gleichförmigen geradlinigen Bewegung?","a":["In gleich langen Zeitabschnitten werden gleich lange Strecken zurückgelegt.","Die Geschwindigkeit nimmt in jeder Sekunde zu.","In gleich langen Zeitabschnitten werden immer längere Strecken zurückgelegt.","Der Körper muss stillstehen."],"c":0,"e":"Eine konstante Geschwindigkeit bedeutet, dass in gleichen Zeiten gleiche Wege zurückgelegt werden."},{"type":"gleichfoermig","q":"Welche Formel berechnet den zurückgelegten Weg bei konstanter Geschwindigkeit?","a":["s = v · t","s = v / t","s = t / v","s = ½ · a · t²"],"c":0,"e":"Aus der bekannten Geschwindigkeitsformel v = s / t folgt durch Umstellen s = v · t."},{"type":"gleichfoermig","q":"Ein Zug fährt geradlinig mit konstanter Geschwindigkeit. Seine Fahrzeit verdoppelt sich. Was geschieht mit dem zurückgelegten Weg?","a":["Er verdoppelt sich.","Er vervierfacht sich.","Er halbiert sich.","Er bleibt gleich."],"c":0,"e":"Bei konstanter Geschwindigkeit gilt s = v · t. Die Strecke wächst proportional mit der Zeit."},{"type":"rechnung","q":"Ein Zug fährt gleichförmig mit 20 m/s. Wie weit kommt er in 3 s?","a":["60 m","23 m","6,7 m","120 m"],"c":0,"e":"s = v · t = 20 m/s · 3 s = 60 m."},{"type":"gleichfoermig","q":"Ein ICE fährt mit konstanter Geschwindigkeit. Welche Größe muss bekannt sein, um aus der Fahrzeit seine Strecke zu berechnen?","a":["Seine Geschwindigkeit","Seine Masse","Seine Beschleunigung während der Fahrt","Die Anziehungskraft der Erde"],"c":0,"e":"Bei gleichförmiger Bewegung gilt s = v · t. Neben der Zeit wird die konstante Geschwindigkeit benötigt."},{"type":"beschleunigt","q":"Ein Auto fährt aus dem Stand an. Seine Geschwindigkeit nimmt jede Sekunde um denselben Betrag zu. Wie heißt diese Bewegung?","a":["Gleichmäßig beschleunigte Bewegung","Gleichförmige Bewegung","Bewegung mit ständig wechselnder Beschleunigung","Bewegung ohne Geschwindigkeitsänderung"],"c":0,"e":"Wenn sich die Geschwindigkeit in gleichen Zeiten jeweils um denselben Betrag ändert, ist die Beschleunigung konstant."},{"type":"beschleunigt","q":"Ein Auto beschleunigt gleichmäßig aus dem Stand. Was passiert mit den Strecken, die es in aufeinanderfolgenden Sekunden zurücklegt?","a":["Sie werden größer.","Sie bleiben gleich lang.","Sie werden immer kleiner.","Sie sind in jeder Sekunde null."],"c":0,"e":"Da das Auto immer schneller wird, legt es in jeder weiteren Sekunde eine längere Strecke zurück."},{"type":"beschleunigt","q":"Welche Formel liefert bei konstanter Beschleunigung die Geschwindigkeit nach einer Zeit t, wenn der Körper aus dem Stand startet?","a":["v = a · t","v = a / t","v = s · t","v = ½ · a · t²"],"c":0,"e":"Aus dem Stand ist die Anfangsgeschwindigkeit null. Bei konstanter Beschleunigung gilt v = a · t."},{"type":"rechnung","q":"Ein Auto beschleunigt aus dem Stand gleichmäßig mit 2 m/s². Welche Geschwindigkeit hat es nach 3 s?","a":["6 m/s","1,5 m/s","9 m/s","12 m/s"],"c":0,"e":"v = a · t = 2 m/s² · 3 s = 6 m/s."},{"type":"beschleunigt","q":"Welche Wegformel gilt für eine gleichmäßig beschleunigte Bewegung aus dem Stand?","a":["s = ½ · a · t²","s = a · t","s = v / t","s = ½ · a / t²"],"c":0,"e":"Für konstante Beschleunigung und eine Anfangsgeschwindigkeit von null gilt s = ½ · a · t²."},{"type":"beschleunigt","q":"Bei einer gleichmäßig beschleunigten Bewegung aus dem Stand verdoppelt sich die Zeit. Wie verändert sich die zurückgelegte Strecke?","a":["Sie vervierfacht sich.","Sie verdoppelt sich.","Sie bleibt unverändert.","Sie verachtfacht sich."],"c":0,"e":"Wegen s = ½ · a · t² führt die doppelte Zeit zur vierfachen Strecke: (2t)² = 4t²."},{"type":"beschleunigt","q":"Ein Auto wird gleichmäßig langsamer. Welche Aussage passt dazu?","a":["Auch das Bremsen ist eine beschleunigte Bewegung, hier mit abnehmender Geschwindigkeit.","Das Auto hat beim Bremsen keine Beschleunigung.","Die Geschwindigkeit bleibt während des Bremsens konstant.","Nur beim freien Fall kann sich Geschwindigkeit ändern."],"c":0,"e":"Beschleunigung bezeichnet jede Geschwindigkeitsänderung. Beim gleichmäßigen Bremsen nimmt die Geschwindigkeit in gleichen Zeiten um gleiche Beträge ab."},{"type":"freier-fall","q":"Welche Aussage gilt für Körper, die am selben Ort auf der Erde ohne Luftwiderstand aus der Ruhe fallen?","a":["Sie haben unabhängig von ihrer Masse dieselbe Fallbeschleunigung.","Der schwerere Körper hat stets die größere Fallbeschleunigung.","Der leichtere Körper hat stets die größere Fallbeschleunigung.","Ihre Fallgeschwindigkeit bleibt immer gleich."],"c":0,"e":"Ohne Luftwiderstand werden alle Körper am selben Ort unabhängig von ihrer Masse mit derselben Beschleunigung schneller."},{"type":"rechnung","q":"Ein Stein fällt aus der Ruhe 2 s lang ohne Luftwiderstand. Wie weit fällt er bei g ≈ 10 m/s²?","a":["20 m","10 m","40 m","5 m"],"c":0,"e":"Für die Fallstrecke gilt h = ½ · g · t². Einsetzen: h = ½ · 10 m/s² · (2 s)² = 20 m."},{"type":"freier-fall","q":"Was bedeutet die Näherung g ≈ 10 m/s² beim freien Fall nahe der Erdoberfläche?","a":["Die Geschwindigkeit nimmt in jeder Sekunde um etwa 10 m/s zu.","Jeder Gegenstand fällt insgesamt genau 10 m.","Die Fallgeschwindigkeit bleibt immer bei 10 m/s.","Jeder Gegenstand erreicht nach genau 10 s den Boden."],"c":0,"e":"Die Fallbeschleunigung von etwa 10 m/s² bedeutet, dass die Geschwindigkeit während des freien Falls in jeder Sekunde um ungefähr 10 m/s zunimmt."},{"type":"rechnung","q":"Ein Stein wird aus der Ruhe fallen gelassen. Welche Geschwindigkeit erreicht er bei g ≈ 10 m/s² nach 2 s ohne Luftwiderstand?","a":["20 m/s","5 m/s","10 m/s","40 m/s"],"c":0,"e":"Beim freien Fall aus der Ruhe gilt v = g · t = 10 m/s² · 2 s = 20 m/s."},{"type":"freier-fall","q":"Ein Körper fällt aus der Ruhe ohne Luftwiderstand. Welche Formel beschreibt seine bereits durchfallene Strecke h?","a":["h = ½ · g · t²","h = g · t","h = g / t","h = ½ · t / g"],"c":0,"e":"Der freie Fall aus der Ruhe ist eine gleichmäßig beschleunigte Bewegung. Daher gilt h = ½ · g · t²."},{"type":"freier-fall","q":"Warum erreichten Hammer und Feder während der Apollo-15-Mission nahezu gleichzeitig den Mondboden?","a":["Auf dem Mond wirkt nahezu kein Luftwiderstand.","Beide Gegenstände hatten genau dieselbe Masse.","Die Feder war schwerer als der Hammer.","Auf dem Mond wirkt keine Gravitation."],"c":0,"e":"Da der Mond praktisch keine Atmosphäre besitzt, wirkt nahezu kein Luftwiderstand. Hammer und Feder haben am selben Ort dieselbe Fallbeschleunigung."},{"type":"transfer","q":"Eine Münze fällt aus gleicher Höhe auf der Erde und auf dem Mond, jeweils ohne Luftwiderstand. Wo erreicht sie zuerst den Boden?","a":["Auf der Erde, weil die Fallbeschleunigung dort größer ist.","Auf dem Mond, weil dort kaum Luft vorhanden ist.","Auf beiden Himmelskörpern gleichzeitig, weil die Masse gleich ist.","Auf keinem, weil eine Münze im Vakuum nicht fällt."],"c":0,"e":"Die Fallbeschleunigung ist auf der Erde größer als auf dem Mond. Deshalb erreicht die Münze bei gleicher Höhe und gleicher Anfangsgeschwindigkeit die Erde früher."},{"type":"waagerechter-wurf","q":"Welche zwei Bewegungen laufen beim waagerechten Wurf gleichzeitig ab?","a":["Eine gleichförmige horizontale Bewegung und eine gleichmäßig beschleunigte vertikale Bewegung","Zwei gleichförmige Bewegungen","Zwei gleichmäßig beschleunigte Bewegungen","Eine vertikale gleichförmige und eine horizontale beschleunigte Bewegung"],"c":0,"e":"Beim waagerechten Wurf bleibt die horizontale Geschwindigkeit konstant. Gleichzeitig fällt der Körper vertikal gleichmäßig beschleunigt nach unten."},{"type":"waagerechter-wurf","q":"Was geschieht beim waagerechten Wurf mit der horizontalen Geschwindigkeit vₓ im verwendeten Modell?","a":["Sie bleibt konstant.","Sie nimmt wegen der Erdanziehung ständig zu.","Sie wird am höchsten Punkt null.","Sie nimmt mit der Zeit gleichmäßig ab."],"c":0,"e":"Im vereinfachten Modell wirkt in horizontaler Richtung keine Beschleunigung. Daher bleibt vₓ konstant."},{"type":"waagerechter-wurf","q":"Wie wird die vertikale Bewegung eines waagerecht geworfenen Körpers beschrieben?","a":["Wie ein freier Fall ohne vertikale Anfangsgeschwindigkeit","Als gleichförmige Bewegung nach unten","Als Bewegung ohne Beschleunigung","Als gleichförmige Bewegung nach oben"],"c":0,"e":"Vertikal beginnt der Körper beim waagerechten Wurf ohne Anfangsgeschwindigkeit nach oben oder unten und fällt wie beim freien Fall."},{"type":"formeln","q":"Welche Gleichung beschreibt beim waagerechten Wurf die horizontale Entfernung x?","a":["x = vₓ · t","x = ½ · g · t²","x = vₓ / t","x = h₀ − ½ · g · t²"],"c":0,"e":"Horizontal liegt eine gleichförmige Bewegung vor. Deshalb gilt x = vₓ · t."},{"type":"formeln","q":"Welche Gleichung beschreibt beim waagerechten Wurf die Höhe y über dem Boden, wenn die Abwurfhöhe h₀ beträgt?","a":["y = h₀ − ½ · g · t²","y = h₀ + vₓ · t","y = ½ · g · t²","y = vₓ · t − h₀"],"c":0,"e":"Die Höhe beginnt bei h₀ und nimmt durch den freien Fall um ½ · g · t² ab."},{"type":"groessen","q":"Was beschreibt x typischerweise in den Gleichungen zum waagerechten Wurf?","a":["Die horizontale Entfernung vom Abwurfpunkt","Die Höhe über dem Boden","Die Fallbeschleunigung","Die Abwurfhöhe"],"c":0,"e":"x bezeichnet die horizontale Entfernung vom Abwurfpunkt. y beschreibt dagegen die Höhe über dem Boden."},{"type":"parabel","q":"Woher kommt die Bezeichnung Parabelwurf?","a":["Weil die Flugbahn ohne Berücksichtigung des Luftwiderstands die Form einer Parabel besitzt.","Weil die Geschwindigkeit immer parabelförmig zunimmt","Weil die Fallbeschleunigung eine Parabel ist","Weil jeder Wurf am höchsten Punkt seine Geschwindigkeit vollständig verliert"],"c":0,"e":"Aus der Kombination von horizontaler gleichförmiger Bewegung und vertikaler beschleunigter Bewegung durch die Erdanziehung ergibt sich ohne Luftwiderstand eine parabelförmige Flugbahn."},{"type":"parabel","q":"Warum kann man die Zeit t aus den beiden Bewegungsgleichungen entfernen?","a":["Weil dieselbe Zeit t sowohl die horizontale als auch die vertikale Bewegung beschreibt","Weil beim Wurf keine Zeit vergeht","Weil t beim freien Fall immer gleich 1 s ist","Weil die horizontale Geschwindigkeit gleich der Fallbeschleunigung ist"],"c":0,"e":"Beide Teilbewegungen laufen gleichzeitig ab und enthalten dieselbe Zeit t. Deshalb kann man zum Beispiel t = x / vₓ einsetzen."},{"type":"parabel","q":"Welche aus dem Mathematikunterricht bekannte Funktionsart beschreibt die Flugbahn des waagerechten Wurfs?","a":["Eine quadratische Funktion","Eine lineare Funktion","Eine konstante Funktion","Eine umgekehrt proportionale Funktion"],"c":0,"e":"Die Bahngleichung besitzt die Form y = a · x² + c. Das ist eine quadratische Funktion, deren Graph eine Parabel ist."},{"type":"ballistik","q":"Womit beschäftigt sich die Ballistik?","a":["Mit Flugbahnen geworfener oder abgeschossener Körper und den Faktoren, die sie beeinflussen","Nur mit dem freien Fall senkrecht nach unten","Nur mit der Bewegung von Fahrzeugen auf geraden Straßen","Mit der Umrechnung physikalischer Einheiten"],"c":0,"e":"Ballistik untersucht die Flugbahnen geworfener oder abgeschossener Körper und Faktoren, die diese Flugbahnen beeinflussen."},{"type":"modell","q":"Warum ist der behandelte Parabelwurf nur ein vereinfachtes Modell der Ballistik?","a":["Weil beispielsweise der Luftwiderstand vernachlässigt wird","Weil die Erdanziehung vollständig vernachlässigt wird","Weil sich der Körper nur senkrecht bewegt","Weil die Zeit im Modell keine Rolle spielt"],"c":0,"e":"Im vereinfachten Modell wird unter anderem der Luftwiderstand vernachlässigt. Reale Flugbahnen können deshalb vom idealen Modell abweichen."},{"type":"schraeger-wurf","q":"Welche Anfangsgeschwindigkeiten werden beim schrägen Wurf getrennt betrachtet?","a":["Eine horizontale Anfangsgeschwindigkeit vₓ und eine vertikale Anfangsgeschwindigkeit vᵧ","Zwei verschiedene Fallbeschleunigungen","Nur eine vertikale Geschwindigkeit","Nur eine horizontale Geschwindigkeit"],"c":0,"e":"Beim schrägen Wurf wird die Startbewegung getrennt in einen horizontalen Anteil vₓ und einen vertikalen Anteil vᵧ betrachtet."},{"type":"schraeger-wurf","q":"Welche Gleichung gilt beim schrägen Wurf weiterhin für die horizontale Bewegung?","a":["x = vₓ · t","x = vᵧ · t − ½ · g · t²","x = ½ · g · t²","x = g · t"],"c":0,"e":"Auch beim schrägen Wurf bleibt die horizontale Bewegung im Modell gleichförmig. Daher gilt x = vₓ · t."},{"type":"schraeger-wurf","q":"Welche Gleichung beschreibt beim schrägen Wurf die vertikale Bewegung, wenn der Ball bei y = 0 startet?","a":["y = vᵧ · t − ½ · g · t²","y = vₓ · t","y = vᵧ · t + ½ · g · t²","y = ½ · vᵧ · t²"],"c":0,"e":"Vertikal bewegt sich der Ball zunächst mit vᵧ nach oben, während die Erdanziehung ihn gleichzeitig nach unten beschleunigt."},{"type":"schraeger-wurf","q":"Was geschieht beim schrägen Wurf mit der Aufwärtsbewegung des Balls?","a":["Sie wird langsamer, bis der Ball den höchsten Punkt erreicht und anschließend fällt.","Sie wird ständig schneller, bis der Ball den Boden erreicht.","Sie bleibt während des gesamten Flugs gleich schnell.","Sie endet sofort nach dem Abwurf."],"c":0,"e":"Die Erdanziehung wirkt nach unten. Dadurch wird die Aufwärtsbewegung langsamer, bis der höchste Punkt erreicht ist; danach fällt der Ball."},{"type":"parabel","q":"Welche Form hat die Bahngleichung des schrägen Wurfs?","a":["y = a · x² + b · x","y = a · x + b","y = a / x","y = a · x³"],"c":0,"e":"Nach dem Einsetzen von t = x / vₓ enthält die Bahngleichung einen x²-Term und einen x-Term. Sie ist damit quadratisch."},{"type":"transfer","q":"Ein waagerecht geworfener Ball hat eine größere horizontale Geschwindigkeit vₓ. Der Luftwiderstand wird vernachlässigt. Was verändert sich dadurch direkt?","a":["Er legt in derselben Zeit eine größere horizontale Strecke zurück.","Er fällt wegen der größeren horizontalen Geschwindigkeit schneller nach unten.","Die Fallbeschleunigung g wird größer.","Die Abwurfhöhe h₀ wird automatisch größer."],"c":0,"e":"Horizontal gilt x = vₓ · t. Bei gleicher Zeit führt ein größeres vₓ zu einer größeren horizontalen Entfernung; die Fallbeschleunigung bleibt unverändert."},{"type":"rechnung","q":"Ein Ball bewegt sich beim waagerechten Wurf mit vₓ = 4 m/s. Wie weit kommt er horizontal in 0,5 s?","a":["2 m","8 m","4,5 m","0,125 m"],"c":0,"e":"Horizontal gilt x = vₓ · t = 4 m/s · 0,5 s = 2 m."},{"type":"rechnung","q":"Beim Beispiel zum schrägen Wurf gilt y = 10t − 5t². Wie hoch ist der Ball nach 1 s über seiner Abwurfhöhe?","a":["5 m","10 m","15 m","0 m"],"c":0,"e":"Einsetzen von t = 1 s ergibt y = 10 · 1 − 5 · 1² = 5 m."},{"type":"rechnung","q":"Für die Beispielbahn gilt y = 2x − 0,2x². Welche Höhe hat der Ball bei x = 5 m?","a":["5 m","10 m","2,5 m","0 m"],"c":0,"e":"Einsetzen ergibt y = 2 · 5 − 0,2 · 5² = 10 − 5 = 5 m."},{"type":"grundlagen","q":"Womit beschäftigt sich die Dynamik?","a":["Mit den Ursachen von Bewegungsänderungen","Nur mit der Beschreibung von zurückgelegten Wegen","Nur mit gleichförmigen Bewegungen","Mit der Umrechnung von Einheiten"],"c":0,"e":"Die Kinematik beschreibt, wie sich ein Körper bewegt. Die Dynamik untersucht, wodurch sich eine Bewegung verändert."},{"type":"grundlagen","q":"Wann ändert sich die Bewegung eines Körpers?","a":["Wenn er schneller oder langsamer wird oder seine Bewegungsrichtung ändert","Nur wenn er schneller wird","Nur wenn er seine Bewegungsrichtung ändert","Nur wenn er vollständig zum Stillstand kommt"],"c":0,"e":"Eine Bewegungsänderung liegt vor, wenn sich die Geschwindigkeit ändert. Das kann eine Änderung der Schnelligkeit oder der Richtung sein."},{"type":"traegheit","q":"Was bezeichnet man in der Physik als Trägheit?","a":["Die Eigenschaft eines Körpers, sich einer Änderung seiner Bewegung zu widersetzen","Die Fähigkeit eines Körpers, sich ohne Kraft immer schneller zu bewegen","Die Kraft, mit der ein Körper auf die Erde fällt","Die Strecke, die ein Körper in einer Sekunde zurücklegt"],"c":0,"e":"Trägheit bedeutet, dass sich ein Körper einer Änderung seines Bewegungszustands widersetzt."},{"type":"masse","q":"Welche Aussage über die Masse und die Trägheit ist richtig?","a":["Je größer die Masse ist, desto schwieriger lässt sich die Bewegung des Körpers verändern.","Je größer die Masse ist, desto leichter lässt sich der Körper beschleunigen.","Die Masse hat keinen Einfluss auf die Trägheit.","Eine kleinere Masse bedeutet immer eine größere Kraft."],"c":0,"e":"Die träge Masse beschreibt, wie stark die Trägheit eines Körpers ist. Eine größere Masse bedeutet eine größere Trägheit."},{"type":"kraft","q":"Was beschreibt eine Kraft?","a":["Eine Wechselwirkung zwischen Körpern, die eine Bewegung verändern oder einen Körper verformen kann","Nur die Geschwindigkeit eines Körpers","Nur die Masse eines Körpers","Den zurückgelegten Weg eines Körpers"],"c":0,"e":"Eine Kraft beschreibt eine Wechselwirkung zwischen Körpern. Sie kann einen Körper beschleunigen, abbremsen, seine Richtung ändern oder ihn verformen."},{"type":"kraft","q":"Mehrere Kräfte wirken gleichzeitig auf einen Körper. Welche Kraft ist für seine Beschleunigung entscheidend?","a":["Die resultierende Gesamtkraft","Immer die größte einzelne Kraft","Nur die Kraft, die nach rechts wirkt","Die Masse des Körpers"],"c":0,"e":"Wirken mehrere Kräfte, kommt es auf ihre gemeinsame Wirkung an. Entscheidend ist die resultierende Gesamtkraft."},{"type":"newton1","q":"Welche Aussage entspricht dem 1. Newtonschen Axiom, dem Trägheitsprinzip?","a":["Ohne resultierende Gesamtkraft bleibt der Bewegungszustand eines Körpers unverändert.","Ohne resultierende Gesamtkraft wird jeder Körper langsamer.","Jede Kraft erzeugt immer eine gleich große Geschwindigkeit.","Ein Körper kann nur in Ruhe sein, wenn seine Masse null ist."],"c":0,"e":"Nach dem Trägheitsprinzip bleibt ein Körper in Ruhe oder bewegt sich geradlinig mit gleichbleibender Geschwindigkeit weiter, wenn keine resultierende Gesamtkraft wirkt."},{"type":"bezugssystem","q":"Eine Person sitzt in einem fahrenden Zug. Welche Aussage zeigt, warum ein Bezugssystem wichtig ist?","a":["Gegenüber dem Sitz ruht die Person, gegenüber einem Baum neben den Schienen bewegt sie sich.","Die Person bewegt sich gegenüber dem Sitz und dem Baum immer gleich.","Die Person ruht gegenüber jedem möglichen Bezugssystem.","Die Person bewegt sich nur dann, wenn der Zug beschleunigt."],"c":0,"e":"Ob ein Körper ruht oder sich bewegt, hängt vom gewählten Bezugssystem ab."},{"type":"inertialsystem","q":"Was ist ein Inertialsystem?","a":["Ein Bezugssystem, in dem das Trägheitsprinzip gilt","Ein Bezugssystem, in dem jeder Körper beschleunigt","Ein System, in dem keine Masse vorhanden ist","Ein System, in dem ausschließlich die Schwerkraft wirkt"],"c":0,"e":"Ein Inertialsystem ist ein Bezugssystem, in dem das Trägheitsprinzip gilt."},{"type":"newton2","q":"Welche Formel beschreibt das 2. Newtonsche Axiom?","a":["F = m · a","v = s / t","a = Δt / Δv","F = m / a"],"c":0,"e":"Das 2. Newtonsche Axiom verknüpft resultierende Kraft, Masse und Beschleunigung: F = m · a."},{"type":"newton2","q":"Bei gleicher Masse wird die resultierende Kraft auf einen Körper verdoppelt. Was geschieht mit seiner Beschleunigung?","a":["Sie verdoppelt sich.","Sie halbiert sich.","Sie bleibt gleich.","Sie wird null."],"c":0,"e":"Aus F = m · a folgt: Bei gleicher Masse führt die doppelte resultierende Kraft zur doppelten Beschleunigung."},{"type":"newton2","q":"Auf zwei Körper wirkt dieselbe resultierende Kraft. Körper B besitzt die größere Masse. Welcher Körper wird stärker beschleunigt?","a":["Körper A mit der kleineren Masse","Körper B mit der größeren Masse","Beide werden immer gleich stark beschleunigt.","Keiner der beiden Körper wird beschleunigt."],"c":0,"e":"Bei gleicher Kraft gilt: Je größer die Masse ist, desto kleiner ist die Beschleunigung."},{"type":"vektoren","q":"Was signalisiert der Pfeil über den Formelzeichen für Kraft und Beschleunigung?","a":["Dass Kraft und Beschleunigung Vektoren sind und deshalb neben einer Größe auch eine Richtung besitzen.","Dass Kraft und Beschleunigung immer nach oben zeigen","Dass die Größen nur positive Werte annehmen dürfen","Dass Kraft und Beschleunigung miteinander multipliziert werden."],"c":0,"e":"Der Pfeil kennzeichnet Kraft und Beschleunigung als Vektoren. Vektoren besitzen neben einer Größe auch eine Richtung."},{"type":"einheiten","q":"Was bedeutet 1 Newton (1 N)?","a":["1 N = 1 kg · m/s²","1 N = 1 kg · m/s","1 N = 1 m/s²","1 N = 1 kg/s²"],"c":0,"e":"Aus F = m · a folgt für die Einheit der Kraft: 1 N = 1 kg · m/s²."},{"type":"newton3","q":"Welche Aussage beschreibt das 3. Newtonsche Axiom, das Wechselwirkungsprinzip?","a":["Übt Körper A eine Kraft auf Körper B aus, wirkt gleichzeitig eine gleich große, entgegengesetzt gerichtete Kraft von B auf A.","Eine Kraft wirkt immer nur auf einen einzigen Körper und besitzt keine Gegenwirkung.","Zwei wechselwirkende Kräfte wirken immer in dieselbe Richtung.","Die Gegenkraft entsteht erst, nachdem die erste Kraft aufgehört hat."],"c":0,"e":"Das Wechselwirkungsprinzip wird oft mit Actio = Reactio zusammengefasst: Kräfte treten paarweise, gleichzeitig, gleich groß und entgegengesetzt gerichtet auf."},{"type":"newton3","q":"Warum heben sich die beiden Kräfte eines Actio-Reactio-Paares nicht gegenseitig auf?","a":["Weil sie auf verschiedene Körper wirken","Weil eine der beiden Kräfte immer größer ist","Weil nur eine der beiden Kräfte tatsächlich wirkt","Weil beide Kräfte in dieselbe Richtung zeigen"],"c":0,"e":"Die beiden Kräfte sind gleich groß und entgegengesetzt gerichtet, wirken aber auf verschiedene Körper. Deshalb dürfen sie nicht als Kräfte auf demselben Körper gegeneinander verrechnet werden."},{"type":"rechnung","q":"Auf einen Wagen mit einer Masse von 20 kg wirkt eine resultierende Kraft von 40 N. Wie groß ist seine Beschleunigung?","a":["2 m/s²","20 m/s²","800 m/s²","0,5 m/s²"],"c":0,"e":"Aus F = m · a folgt a = F / m = 40 N / 20 kg = 2 m/s²."},{"type":"rechnung","q":"Ein Körper mit einer Masse von 10 kg wird mit 3 m/s² beschleunigt. Wie groß ist die resultierende Kraft?","a":["30 N","13 N","3,3 N","7 N"],"c":0,"e":"Es gilt F = m · a = 10 kg · 3 m/s² = 30 N."},{"type":"rechnung","q":"Auf einen Wagen wirken 100 N nach rechts und 40 N nach links. Wie groß ist die resultierende Kraft?","a":["60 N nach rechts","140 N nach rechts","60 N nach links","40 N nach rechts"],"c":0,"e":"Die Kräfte wirken entgegengesetzt. Daher werden ihre Beträge subtrahiert: 100 N − 40 N = 60 N nach rechts."},{"type":"verknuepfung","q":"Welche Aussage beschreibt die Verbindung zwischen Dynamik und Kinematik am besten?","a":["Die Dynamik erklärt mithilfe von Kräften, warum sich die in der Kinematik beschriebene Bewegung verändert.","Die Dynamik ersetzt alle Größen der Kinematik durch die Masse.","Die Kinematik erklärt die Ursachen von Kräften, die Dynamik nur den zurückgelegten Weg.","Zwischen Dynamik und Kinematik besteht kein Zusammenhang."],"c":0,"e":"Die Kinematik beschreibt Bewegung mit Größen wie Weg, Geschwindigkeit, Beschleunigung und Zeit. Die Dynamik verbindet Bewegungsänderungen mit wirkenden Kräften."}];
+
+let quiz = [];
+let current = 0;
+let score = 0;
+let answered = false;
+let history = [];
+
+
+function shuffle(arr){
+  const copy = [...arr];
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]] = [copy[j],copy[i]];
+  }
+  return copy;
+}
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function startQuiz(){
+  quiz = shuffle(ALL_QUESTIONS);
+  current = 0;
+  score = 0;
+  history = [];
+  show('quiz');
+  renderQuestion();
+}
+function renderQuestion(){
+  answered = false;
+  const item = quiz[current];
+  document.getElementById('counter').textContent = `Frage ${current+1}/${quiz.length}`;
+  document.getElementById('scoreNow').textContent = `${score} richtig`;
+  document.getElementById('bar').style.width = `${(current/quiz.length)*100}%`;
+  document.getElementById('tag').textContent = 'Physik · Megaquiz Nr.1 · Quiz 1–5';
+  document.getElementById('question').textContent = item.q;
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const answerBox = document.getElementById('answers');
+  answerBox.innerHTML = '';
+  const answers = item.a.map((text, idx)=>({text, idx}));
+  shuffle(answers).forEach(({text, idx})=>{
+    const btn = document.createElement('button');
+    btn.className = 'answer';
+    btn.textContent = text;
+    btn.onclick = () => chooseAnswer(btn, idx);
+    answerBox.appendChild(btn);
+  });
+}
+function chooseAnswer(btn, idx){
+  if(answered) return;
+  answered = true;
+  const item = quiz[current];
+  const correct = idx === item.c;
+  if(correct) score++;
+  history.push({q:item.q, correct, chosen:btn.textContent, right:item.a[item.c], exp:item.e, type:item.type});
+
+  document.querySelectorAll('.answer').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === item.a[item.c]) b.classList.add('correct');
+  });
+  if(!correct) btn.classList.add('wrong');
+
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback show';
+  feedback.innerHTML = `<strong>${correct ? 'Richtig.' : 'Nicht ganz.'}</strong>${escapeHTML(item.e)}`;
+  document.getElementById('scoreNow').textContent = `${score} richtig`;
+  document.getElementById('nextBtn').style.display = 'inline-block';
+  document.getElementById('nextBtn').textContent = current === quiz.length-1 ? 'Auswertung anzeigen' : 'Weiter';
+  document.getElementById('bar').style.width = `${((current+1)/quiz.length)*100}%`;
+}
+function nextQuestion(){
+  if(current < quiz.length-1){
+    current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+function showResult(){
+  show('result');
+  const percent = Math.round((score/quiz.length)*100);
+  document.getElementById('finalScore').textContent = `${score}/${quiz.length}`;
+  let text = '';
+  if(percent >= 85) text = 'Sehr stark. Der große Fragenpool sitzt bereits gut.';
+  else if(percent >= 65) text = 'Viele Inhalte sitzen. Schauen Sie sich besonders die falsch beantworteten Fragen noch einmal an.';
+  else text = 'Nutzen Sie die Auswertung, um die noch unsicheren Themen gezielt zu wiederholen.';
+  document.getElementById('finalText').textContent = `${percent}% richtig. ${text}`;
+  const review = document.getElementById('review');
+  review.innerHTML = '';
+  history.forEach((h,i)=>{
+    const div = document.createElement('div');
+    div.className = `review-item ${h.correct?'ok':'bad'}`;
+    div.innerHTML = `<b>${i+1}. ${escapeHTML(h.q)}</b>${h.correct ? 'Richtig beantwortet.' : `Ihre Antwort: ${escapeHTML(h.chosen)}<br>Richtig: ${escapeHTML(h.right)}`}<br><span class="small">${escapeHTML(h.exp)}</span>`;
+    review.appendChild(div);
+  });
+}
+function backToStart(){ show('start'); }
+function escapeHTML(str){
+  return String(str).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+</script>
+</body>
+</html>
